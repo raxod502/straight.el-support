@@ -40,36 +40,39 @@
 
 (straight-use-package 'org)
 (bind-key "C-c a" #'org-agenda)
-(add-hook 'org-mode-hook #'org-indent-mode)
+(with-eval-after-load 'org
+  (add-hook 'org-mode-hook #'org-indent-mode))
 
 (straight-use-package 'auctex)
-(setq TeX-auto-save t)
-(setq TeX-parse-self t)
-(el-patch-defun TeX-update-style (&optional force)
-  "Run style specific hooks for the current document.
+(el-patch-feature tex)
+(with-eval-after-load 'tex
+  (setq TeX-auto-save t)
+  (setq TeX-parse-self t)
+  (el-patch-defun TeX-update-style (&optional force)
+    "Run style specific hooks for the current document.
 
 Only do this if it has not been done before, or if optional argument
 FORCE is not nil."
-  (unless (or (and (boundp 'TeX-auto-update)
-                   (eq TeX-auto-update 'BibTeX)) ; Not a real TeX buffer
-              (and (not force)
-                   TeX-style-hook-applied-p))
-    (setq TeX-style-hook-applied-p t)
-    (el-patch-remove
-      (message "Applying style hooks..."))
-    (TeX-run-style-hooks (TeX-strip-extension nil nil t))
-    ;; Run parent style hooks if it has a single parent that isn't itself.
-    (if (or (not (memq TeX-master '(nil t)))
-            (and (buffer-file-name)
-                 (string-match TeX-one-master
-                               (file-name-nondirectory (buffer-file-name)))))
-        (TeX-run-style-hooks (TeX-master-file)))
-    (if (and TeX-parse-self
-             (null (cdr-safe (assoc (TeX-strip-extension nil nil t)
-                                    TeX-style-hook-list))))
-        (TeX-auto-apply))
-    (run-hooks 'TeX-update-style-hook)
-    (el-patch-remove
-      (message "Applying style hooks... done"))))
+    (unless (or (and (boundp 'TeX-auto-update)
+                     (eq TeX-auto-update 'BibTeX)) ; Not a real TeX buffer
+                (and (not force)
+                     TeX-style-hook-applied-p))
+      (setq TeX-style-hook-applied-p t)
+      (el-patch-remove
+        (message "Applying style hooks..."))
+      (TeX-run-style-hooks (TeX-strip-extension nil nil t))
+      ;; Run parent style hooks if it has a single parent that isn't itself.
+      (if (or (not (memq TeX-master '(nil t)))
+              (and (buffer-file-name)
+                   (string-match TeX-one-master
+                                 (file-name-nondirectory (buffer-file-name)))))
+          (TeX-run-style-hooks (TeX-master-file)))
+      (if (and TeX-parse-self
+               (null (cdr-safe (assoc (TeX-strip-extension nil nil t)
+                                      TeX-style-hook-list))))
+          (TeX-auto-apply))
+      (run-hooks 'TeX-update-style-hook)
+      (el-patch-remove
+        (message "Applying style hooks... done")))))
 
 (straight-use-package 'yaml-mode)
