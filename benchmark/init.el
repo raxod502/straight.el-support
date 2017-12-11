@@ -9,6 +9,8 @@
 (unless load-file-name
   (error "You should load this file at Emacs initialization"))
 
+(switch-to-buffer-other-window (messages-buffer))
+
 (setq default-directory (file-name-directory
                          (file-truename load-file-name)))
 
@@ -24,7 +26,8 @@
         (backend "straight")
         (named-args '(package-count backend))
         (install nil)
-        (live nil))
+        (live nil)
+        (profile nil))
     (dolist (arg command-line-args)
       (if (memq prev-arg named-args)
           (progn
@@ -49,6 +52,12 @@
                 (`no-live
                  (setq live nil)
                  (handle))
+                (`profile
+                 (setq profile t)
+                 (handle))
+                (`no-profile
+                 (setq profile nil)
+                 (handle))
                 (_ (error "Unknown argument `%s'" arg)))))))
     (setq package-count (string-to-number package-count))
     (setq backend (intern backend))
@@ -57,6 +66,9 @@
       (`straight
        (when (and install (file-exists-p "straight"))
          (delete-directory "straight" 'recursive))
+
+       (when profile
+         (profiler-start 'cpu))
 
        (benchmark
         1
@@ -86,10 +98,17 @@
                (straight-use-package (intern package))
                (cl-incf idx)
                (when (>= idx package-count)
-                 (cl-return)))))))
+                 (cl-return))))))
+
+       (when profile
+         (profiler-report)
+         (profiler-stop)))
       (`package
        (when (and install (file-exists-p "elpa"))
          (delete-directory "elpa" 'recursive))
+
+       (when profile
+         (profiler-start 'cpu))
 
        (benchmark
         1
@@ -109,7 +128,9 @@
                  (package-install (intern package))
                  (cl-incf idx)
                  (when (>= idx package-count)
-                   (cl-return))))))))
-      (_ (error "Unknown backend: `%S'" backend)))))
+                   (cl-return)))))))
 
-(switch-to-buffer (messages-buffer))
+       (when profile
+         (profiler-report)
+         (profiler-stop)))
+      (_ (error "Unknown backend: `%S'" backend)))))
