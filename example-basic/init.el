@@ -9,6 +9,9 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
+(straight-use-package 'el-patch)
+(require 'el-patch)
+
 (straight-use-package 'bind-key)
 (require 'bind-key)
 
@@ -42,8 +45,6 @@
 (straight-use-package 'auctex)
 (setq TeX-auto-save t)
 (setq TeX-parse-self t)
-
-(straight-use-package 'el-patch)
 (el-patch-defun TeX-update-style (&optional force)
   "Run style specific hooks for the current document.
 
